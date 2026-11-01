@@ -1,0 +1,43 @@
+name: Build STS2 daily feed
+
+on:
+  schedule:
+    # GitHub can delay scheduled runs by hours, or drop them. Both runs publish
+    # the next day's daily well before the 00:00 UTC reset (see --lead-hours).
+    # Re-runs produce the same feed.
+    - cron: "17 12 * * *"  # 12:17 UTC
+    - cron: "17 18 * * *"  # 18:17 UTC, backup
+  workflow_dispatch:
+    inputs:
+      repost:
+        description: "Repost the latest daily so Slack posts it to the channel again"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate feed and page
+        run: |
+          mkdir -p public
+          python3 sts2_daily.py --rss public/feed.xml --html public/index.html --lead-hours 12 \
+            --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" \
+            ${{ inputs.repost && '--repost' || '' }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4
