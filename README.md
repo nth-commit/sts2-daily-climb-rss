@@ -32,6 +32,17 @@ python3 sts2_daily.py --rss feed.xml --repost   # add a one-off copy of today's 
 4. In Slack, run `/feed subscribe https://<user>.github.io/<repo>/feed.xml` in the channel (requires the Slack RSS app). The preview Slack shows on subscribe is only visible to you; later items are posted to the whole channel.
 5. To post the latest daily to the channel again, run the workflow by hand with "Repost" ticked. It adds a copy of the latest item with a one-off ID, which Slack posts on its next check. The next scheduled run drops the copy from the feed.
 
+## Starting the workflow from a Mac
+
+GitHub can start scheduled runs hours late. A Mac that stays on can start the workflow itself at 10:00 local time:
+
+```bash
+gh auth login                   # once, if the GitHub CLI isn't logged in
+scripts/install-launchd.sh
+```
+
+This installs a launchd agent for your user. It runs while you are logged in, and a run missed during sleep happens on wake. Output goes to `~/Library/Logs/sts2-daily-climb.log`. Re-run the script after moving the repository folder. To remove the agent, run `scripts/install-launchd.sh --uninstall`.
+
 ## Maintenance
 
 The character list and modifier lists are hardcoded. Modifier summaries are paraphrased. A patch that adds a character or modifier changes the daily, so the lists in `sts2_daily.py` need an update. A check: compare the script's output with the in-game daily screen after each major patch.

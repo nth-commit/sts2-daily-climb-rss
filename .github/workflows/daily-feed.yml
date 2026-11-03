@@ -2,11 +2,11 @@ name: Build STS2 daily feed
 
 on:
   schedule:
-    # GitHub can delay scheduled runs by hours, or drop them. Both runs publish
-    # the next day's daily well before the 00:00 UTC reset (see --lead-hours).
-    # Re-runs produce the same feed.
-    - cron: "17 12 * * *"  # 12:17 UTC
-    - cron: "17 18 * * *"  # 18:17 UTC, backup
+    # The main trigger is a launchd agent (scripts/install-launchd.sh) that
+    # starts this workflow at 21:00 or 22:00 UTC. These runs are backups; GitHub
+    # can delay them by hours or drop them. Re-runs produce the same feed.
+    - cron: "17 22 * * *"  # 22:17 UTC
+    - cron: "17 23 * * *"  # 23:17 UTC
   workflow_dispatch:
     inputs:
       repost:
@@ -33,7 +33,7 @@ jobs:
       - name: Generate feed and page
         run: |
           mkdir -p public
-          python3 sts2_daily.py --rss public/feed.xml --html public/index.html --lead-hours 12 \
+          python3 sts2_daily.py --rss public/feed.xml --html public/index.html --lead-hours 6 \
             --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" \
             ${{ inputs.repost && '--repost' || '' }}
       - uses: actions/upload-pages-artifact@v3
